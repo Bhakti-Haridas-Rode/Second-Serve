@@ -6,3 +6,5 @@ Second Serve is an artificial intelligence-based circular food redistribution so
 When food is not taken, it will automatically be reused as an animal feed, then compost, so that food waste does not become not used at all.
 
 The combination of AI and sustainability and social welfare will help Second Semver to develop a scalable, data-driven approach to smarter urban resources management.
+
+As this is a prototype i have used local host for this project.
