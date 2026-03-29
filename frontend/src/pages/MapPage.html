@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Serve — Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --coral:   #e3897d;
+            --dark:    #18212b;
+            --plum:    #6e1650;
+            --wine:    #6e1636;
+            --forest:  #1c422b;
+            --navy:    #032942;
+            --beige:   #f5f0e8;
+            --beige-dark: #ede5d8;
+            --white:   #ffffff;
+            --text-muted: #8a9bb0;
+        }
+
+        body { font-family: 'Georgia', serif; background: var(--dark); }
+
+        /* Top bar */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+            height: 60px;
+            background: var(--dark);
+            display: flex; align-items: center;
+            padding: 0 28px;
+            gap: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .topbar-logo { font-size: 17px; font-weight: bold; color: var(--white); }
+        .topbar-sub  { font-size: 12px; color: var(--coral); font-style: italic; }
+
+        .topbar-nav { display: flex; gap: 6px; margin-left: 20px; }
+
+        .nav-link {
+            padding: 7px 16px; border-radius: 8px; font-size: 13px;
+            color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--white); background: rgba(255,255,255,0.08);
+        }
+
+        .topbar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+
+        .legend {
+            display: flex; gap: 14px; align-items: center;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot  { width: 12px; height: 12px; border-radius: 50%; }
+        .legend-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+        /* Map */
+        #map {
+            position: fixed; top: 60px; left: 0; right: 0; bottom: 0;
+            z-index: 1;
+        }
+
+        /* Side panel */
+        .side-panel {
+            position: fixed; top: 60px; right: 0; bottom: 0;
+            width: 320px; z-index: 200;
+            background: var(--beige);
+            overflow-y: auto;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .side-panel.open { transform: translateX(0); }
+
+        .panel-header {
+            padding: 20px 22px 16px;
+            background: var(--dark);
+            color: var(--white);
+        }
+
+        .panel-title { font-size: 16px; font-weight: bold; }
+        .panel-sub   { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 3px; }
+
+        .panel-close {
+            position: absolute; top: 16px; right: 16px;
+            background: none; border: none; color: rgba(255,255,255,0.6);
+            font-size: 20px; cursor: pointer;
+        }
+
+        .panel-body { padding: 18px; }
+
+        .listing-card {
+            background: var(--white); border-radius: 12px;
+            padding: 16px; margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .lc-name   { font-size: 15px; font-weight: bold; color: var(--dark); }
+        .lc-meta   { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .stage-badge {
+            display: inline-block; margin-top: 8px;
+            padding: 3px 10px; border-radius: 20px; font-size: 11px;
+            font-weight: bold; text-transform: uppercase;
+        }
+        .stage-human   { background: rgba(28,66,43,0.12);  color: var(--forest); }
+        .stage-animal  { background: rgba(227,137,125,0.2); color: var(--wine); }
+        .stage-compost { background: rgba(3,41,66,0.12);   color: var(--navy); }
+
+        .toggle-panel-btn {
+            position: fixed; right: 20px; top: 80px; z-index: 300;
+            background: var(--plum); color: var(--white);
+            border: none; padding: 10px 16px; border-radius: 10px;
+            font-family: 'Georgia', serif; font-size: 13px;
+            cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+    <div>
+        <div class="topbar-logo">🍛 Second Serve</div>
+        <div class="topbar-sub">Live Map</div>
+    </div>
+
+    <div class="topbar-nav">
+        <span class="nav-link" onclick="goBack()">← Back to Dashboard</span>
+        <span class="nav-link active">Map</span>
+        <span class="nav-link" onclick="window.location.href='QualityPage.html'">Food Quality</span>
+    </div>
+
+    <div class="topbar-right">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#1c422b;"></div>
+                <div class="legend-label">Donor</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#032942;"></div>
+                <div class="legend-label">Receiver</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#e3897d;"></div>
+                <div class="legend-label">Active Listing</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Map -->
+<div id="map"></div>
+
+<!-- Toggle panel button -->
+<button class="toggle-panel-btn" onclick="togglePanel()">📋 View Listings</button>
+
+<!-- Side panel -->
+<div class="side-panel" id="side-panel">
+    <div class="panel-header">
+        <div class="panel-title">Available Listings</div>
+        <div class="panel-sub">Click a listing to see on map</div>
+        <button class="panel-close" onclick="togglePanel()">×</button>
+    </div>
+    <div class="panel-body" id="panel-body">
+        Loading...
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const API = 'http://127.0.0.1:8000';
+    const token = localStorage.getItem('token');
+
+    // Init map — centered on India
+    const map = L.map('map').setView([19.07, 72.87], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(map);
+
+    // Custom marker icons
+    function makeIcon(color) {
+        return L.divIcon({
+            html: `<div style="
+                width: 16px; height: 16px; border-radius: 50%;
+                background: ${color}; border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            "></div>`,
+            className: '',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+    }
+
+    const donorIcon   = makeIcon('#1c422b');
+    const listingIcon = makeIcon('#e3897d');
+
+    let panelOpen = false;
+
+    function togglePanel() {
+        panelOpen = !panelOpen;
+        document.getElementById('side-panel').classList.toggle('open', panelOpen);
+    }
+
+    function goBack() {
+        const role = localStorage.getItem('role');
+        window.location.href = role === 'donor' ? 'Dashboard.html' : 'NGOPage.html';
+    }
+
+    function stageBadge(stage) {
+        return `<span class="stage-badge stage-${stage}">${stage}</span>`;
+    }
+
+    async function loadMapData() {
+        try {
+            const res  = await fetch(`${API}/listings/available`);
+            const data = await res.json();
+
+            const panelBody = document.getElementById('panel-body');
+
+            if (!data.length) {
+                panelBody.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No active listings.</div>';
+                return;
+            }
+
+            panelBody.innerHTML = '';
+
+            data.forEach(listing => {
+                // Add marker — use approximate coords for now
+                // In production these come from donor.latitude/longitude
+                const lat = 19.07 + (Math.random() - 0.5) * 0.4;
+                const lon = 72.87 + (Math.random() - 0.5) * 0.4;
+
+                const marker = L.marker([lat, lon], { icon: listingIcon }).addTo(map);
+                marker.bindPopup(`
+                    <div style="font-family:Georgia,serif; min-width:180px;">
+                        <div style="font-weight:bold;font-size:15px;">${listing.food_name}</div>
+                        <div style="font-size:12px;color:#666;margin-top:3px;">${listing.quantity} servings · ${listing.food_type}</div>
+                        <div style="margin-top:8px;">
+                            <span style="font-size:11px;color:#1c422b;font-weight:bold;">🟢 Human: ${listing.remaining_human_hours ?? '—'}h</span><br>
+                            <span style="font-size:11px;color:#e3897d;font-weight:bold;">🟠 Animal: ${listing.remaining_animal_hours ?? '—'}h</span><br>
+                            <span style="font-size:11px;color:#032942;font-weight:bold;">🔵 Compost: ${listing.remaining_compost_hours ?? '—'}h</span>
+                        </div>
+                        <div style="margin-top:8px;font-weight:bold;font-size:12px;text-transform:uppercase;color:#6e1650;">
+                            Stage: ${listing.redistribution_stage}
+                        </div>
+                    </div>
+                `);
+
+                // Panel card
+                const card = document.createElement('div');
+                card.className = 'listing-card';
+                card.style.cursor = 'pointer';
+                card.innerHTML = `
+                    <div class="lc-name">${listing.food_name}</div>
+                    <div class="lc-meta">${listing.quantity} servings · ${listing.food_type} · ₹${listing.price === 0 ? 'Free' : listing.price}</div>
+                    <div class="lc-meta" style="margin-top:5px;">
+                        🟢 ${listing.remaining_human_hours ?? '—'}h &nbsp;
+                        🟠 ${listing.remaining_animal_hours ?? '—'}h &nbsp;
+                        🔵 ${listing.remaining_compost_hours ?? '—'}h
+                    </div>
+                    ${stageBadge(listing.redistribution_stage)}
+                `;
+                card.onclick = () => {
+                    map.flyTo([lat, lon], 14, { duration: 1.2 });
+                    marker.openPopup();
+                };
+
+                panelBody.appendChild(card);
+            });
+
+        } catch (e) {
+            document.getElementById('panel-body').innerHTML =
+                '<div style="color:var(--wine);font-size:13px;padding:10px 0;">Failed to load. Is the backend running?</div>';
+        }
+    }
+
+    loadMapData();
+</script>
+
+</body>
+</html>

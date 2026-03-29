@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Serve — Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --coral:    #e3897d;
+            --dark:     #18212b;
+            --plum:     #6e1650;
+            --wine:     #6e1636;
+            --forest:   #1c422b;
+            --navy:     #032942;
+            --beige:    #f5f0e8;
+            --beige-dark: #ede5d8;
+            --white:    #ffffff;
+            --text-muted: #8a9bb0;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background circles */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(110,22,80,0.15), transparent 70%);
+            top: -100px;
+            right: -100px;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(28,66,43,0.2), transparent 70%);
+            bottom: -80px;
+            left: -80px;
+        }
+
+        .page-wrapper {
+            display: flex;
+            width: 900px;
+            min-height: 560px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Left brand panel */
+        .brand-panel {
+            width: 42%;
+            background: linear-gradient(160deg, var(--plum), var(--wine), var(--navy));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 50px 40px;
+        }
+
+        .brand-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(227,137,125,0.2);
+            border: 2px solid var(--coral);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 28px;
+        }
+
+        .brand-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--white);
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .brand-tagline {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .brand-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--coral);
+            flex-shrink: 0;
+        }
+
+        .stat-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Right form panel */
+        .form-panel {
+            width: 58%;
+            background: var(--beige);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 50px 48px;
+        }
+
+        .tab-switcher {
+            display: flex;
+            background: var(--beige-dark);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 36px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--dark);
+            color: var(--white);
+        }
+
+        .form-title {
+            font-size: 24px;
+            color: var(--dark);
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .form-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            color: var(--dark);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--beige-dark);
+            border-radius: 10px;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            color: var(--dark);
+            background: var(--white);
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--plum);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, var(--plum), var(--wine));
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Georgia', serif;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: var(--wine);
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .success-msg {
+            color: var(--forest);
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+    <!-- Left Brand Panel -->
+    <div class="brand-panel">
+        <div class="brand-icon">🍛</div>
+        <div class="brand-name">Second Serve</div>
+        <div class="brand-tagline">AI-driven circular food redistribution. Connecting surplus to need.</div>
+        <div class="brand-stats">
+            <div class="stat-item">
+                <div class="stat-dot"></div>
+                <div class="stat-text">Human → Animal → Compost pipeline</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-dot"></div>
+                <div class="stat-text">Real-time freshness prediction</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-dot"></div>
+                <div class="stat-text">KNN-powered NGO matching</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-dot"></div>
+                <div class="stat-text">Zero food to landfill</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Form Panel -->
+    <div class="form-panel">
+
+        <!-- Tab switcher -->
+        <div class="tab-switcher">
+            <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+            <button class="tab-btn" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div class="tab-content active" id="tab-login">
+            <div class="form-title">Welcome back</div>
+            <div class="form-subtitle">Sign in to your Second Serve account</div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" placeholder="you@example.com">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+            </div>
+
+            <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+
+            <div class="error-msg" id="login-error"></div>
+            <div class="success-msg" id="login-success"></div>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div class="tab-content" id="tab-register">
+            <div class="form-title">Create account</div>
+            <div class="form-subtitle">Join the Second Serve network</div>
+
+            <div class="form-group">
+                <label>Full Name / Organisation</label>
+                <input type="text" id="reg-name" placeholder="Amit Shah / Helping NGO">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="reg-email" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="reg-password" placeholder="Min 8 chars">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="reg-role" onchange="toggleDonorType()">
+                        <option value="donor">Donor (Restaurant / Caterer)</option>
+                        <option value="receiver">Receiver (NGO / Individual)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="donor-type-group">
+                    <label>Donor Type</label>
+                    <select id="reg-donor-type">
+                        <option value="restaurant">Restaurant</option>
+                        <option value="bakery">Bakery</option>
+                        <option value="caterer">Caterer</option>
+                        <option value="canteen">Canteen</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="reg-phone" placeholder="9999999999">
+                </div>
+                <div class="form-group">
+                    <label>Pincode</label>
+                    <input type="text" id="reg-pincode" placeholder="411001">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="reg-address" placeholder="City / Area">
+            </div>
+
+            <button class="btn-primary" onclick="handleRegister()">Create Account</button>
+
+            <div class="error-msg" id="reg-error"></div>
+            <div class="success-msg" id="reg-success"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const API = 'http://127.0.0.1:8000';
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach((b, i) => {
+            b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+        });
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    function toggleDonorType() {
+        const role = document.getElementById('reg-role').value;
+        document.getElementById('donor-type-group').style.display = role === 'donor' ? 'block' : 'none';
+    }
+
+    function showMsg(id, msg, isError) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.style.display = 'block';
+        el.style.color = isError ? '#6e1636' : '#1c422b';
+    }
+
+    async function handleLogin() {
+        const email    = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        if (!email || !password) {
+            showMsg('login-error', 'Please fill in all fields.', true);
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                showMsg('login-error', data.detail || 'Login failed.', true);
+                return;
+            }
+
+            localStorage.setItem('token', data.access_token);
+
+            // Decode role from token payload
+            const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+            localStorage.setItem('role', payload.role);
+            localStorage.setItem('user_id', payload.user_id);
+
+            showMsg('login-success', 'Login successful! Redirecting...', false);
+
+            setTimeout(() => {
+                if (payload.role === 'donor') {
+                    window.location.href = 'Dashboard.html';
+                } else {
+                    window.location.href = 'NGOPage.html';
+                }
+            }, 800);
+
+        } catch (e) {
+            showMsg('login-error', 'Cannot connect to server. Is the backend running?', true);
+        }
+    }
+
+    async function handleRegister() {
+        const name      = document.getElementById('reg-name').value.trim();
+        const email     = document.getElementById('reg-email').value.trim();
+        const password  = document.getElementById('reg-password').value;
+        const role      = document.getElementById('reg-role').value;
+        const phone     = document.getElementById('reg-phone').value.trim();
+        const pincode   = parseInt(document.getElementById('reg-pincode').value.trim());
+        const address   = document.getElementById('reg-address').value.trim();
+        const donorType = document.getElementById('reg-donor-type').value;
+
+        if (!name || !email || !password || !phone || !address) {
+            showMsg('reg-error', 'Please fill in all required fields.', true);
+            return;
+        }
+
+        const body = {
+            name, email, password, role, phone,
+            country: 'India',
+            address,
+            latitude: 18.52,
+            longitude: 73.85,
+            pincode: pincode || 411001,
+            donor_type: role === 'donor' ? donorType : null
+        };
+
+        try {
+            const res = await fetch(`${API}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                showMsg('reg-error', data.detail || 'Registration failed.', true);
+                return;
+            }
+
+            showMsg('reg-success', 'Account created! Please login.', false);
+            setTimeout(() => switchTab('login'), 1500);
+
+        } catch (e) {
+            showMsg('reg-error', 'Cannot connect to server.', true);
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Serve — Food Quality Timeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --coral:   #e3897d;
+            --dark:    #18212b;
+            --plum:    #6e1650;
+            --wine:    #6e1636;
+            --forest:  #1c422b;
+            --navy:    #032942;
+            --beige:   #f5f0e8;
+            --beige-dark: #ede5d8;
+            --white:   #ffffff;
+            --text-muted: #8a9bb0;
+        }
+
+        body { font-family: 'Georgia', serif; background: var(--beige); color: var(--dark); min-height: 100vh; }
+
+        /* Top bar */
+        .topbar {
+            height: 60px; background: var(--dark);
+            display: flex; align-items: center;
+            padding: 0 36px; gap: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .topbar-logo { font-size: 18px; font-weight: bold; color: var(--white); }
+        .topbar-sub  { font-size: 11px; color: var(--coral); font-style: italic; }
+
+        .nav-link {
+            padding: 7px 16px; border-radius: 8px; font-size: 13px;
+            color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+        .nav-link.active { color: var(--white); }
+
+        /* Main */
+        .main { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+
+        .page-title    { font-size: 28px; font-weight: bold; color: var(--dark); }
+        .page-subtitle { font-size: 14px; color: var(--text-muted); margin-top: 6px; margin-bottom: 36px; }
+
+        /* Quality lookup */
+        .lookup-card {
+            background: var(--white); border-radius: 18px;
+            padding: 32px; margin-bottom: 36px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+
+        .lookup-title { font-size: 17px; font-weight: bold; margin-bottom: 20px; }
+
+        .lookup-row { display: flex; gap: 14px; align-items: flex-end; }
+
+        .fg {
+            display: flex; flex-direction: column; gap: 6px; flex: 1;
+        }
+        .fg label {
+            font-size: 11px; font-weight: bold; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--dark);
+        }
+        .fg input, .fg select {
+            padding: 12px 14px; border: 1.5px solid var(--beige-dark);
+            border-radius: 10px; font-family: 'Georgia', serif;
+            font-size: 14px; color: var(--dark); outline: none;
+            transition: border-color 0.2s;
+        }
+        .fg input:focus, .fg select:focus { border-color: var(--plum); }
+
+        .btn-check {
+            padding: 12px 28px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--plum), var(--wine));
+            color: var(--white); font-family: 'Georgia', serif;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-check:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Timeline result */
+        .timeline-result {
+            display: none; margin-top: 28px;
+        }
+
+        .tr-food-name {
+            font-size: 20px; font-weight: bold; color: var(--dark); margin-bottom: 6px;
+        }
+        .tr-prepared {
+            font-size: 13px; color: var(--text-muted); margin-bottom: 24px;
+        }
+
+        /* Three stage bars */
+        .stage-bars { display: flex; flex-direction: column; gap: 18px; }
+
+        .stage-row {
+            display: grid; grid-template-columns: 140px 1fr 80px;
+            align-items: center; gap: 16px;
+        }
+
+        .stage-label {
+            display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold;
+        }
+
+        .stage-bar-track {
+            height: 12px; background: var(--beige-dark); border-radius: 6px; overflow: hidden;
+        }
+
+        .stage-bar-fill {
+            height: 100%; border-radius: 6px; transition: width 0.8s ease;
+        }
+
+        .stage-hours {
+            font-size: 18px; font-weight: bold; text-align: right;
+        }
+
+        .current-stage-banner {
+            margin-top: 24px; padding: 16px 20px;
+            border-radius: 12px; display: flex; align-items: center; gap: 14px;
+        }
+
+        .csb-icon { font-size: 28px; }
+        .csb-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(0,0,0,0.5); }
+        .csb-value { font-size: 18px; font-weight: bold; }
+
+        /* Listings quality table */
+        .quality-table {
+            background: var(--white); border-radius: 18px; padding: 28px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+
+        .qt-title { font-size: 17px; font-weight: bold; margin-bottom: 20px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-muted); padding: 10px 14px;
+            text-align: left; border-bottom: 2px solid var(--beige-dark);
+        }
+        td { padding: 14px; border-bottom: 1px solid var(--beige-dark); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--beige); }
+
+        .stage-badge {
+            padding: 4px 12px; border-radius: 20px; font-size: 11px;
+            font-weight: bold; text-transform: uppercase;
+        }
+        .stage-human   { background: rgba(28,66,43,0.12);  color: var(--forest); }
+        .stage-animal  { background: rgba(227,137,125,0.2); color: var(--wine); }
+        .stage-compost { background: rgba(3,41,66,0.12);   color: var(--navy); }
+        .stage-waste   { background: rgba(110,22,80,0.12); color: var(--plum); }
+
+        .bar-mini {
+            display: flex; height: 6px; gap: 2px; border-radius: 3px; overflow: hidden;
+            width: 120px;
+        }
+        .bm-human   { background: var(--forest); }
+        .bm-animal  { background: var(--coral); }
+        .bm-compost { background: var(--navy); }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div>
+        <div class="topbar-logo">🍛 Second Serve</div>
+        <div class="topbar-sub">Food Quality Timeline</div>
+    </div>
+    <span class="nav-link" onclick="goBack()">← Dashboard</span>
+    <span class="nav-link" onclick="window.location.href='MapPage.html'">Map View</span>
+    <span class="nav-link active">Food Quality</span>
+</div>
+
+<div class="main">
+    <div class="page-title">Food Quality Timeline</div>
+    <div class="page-subtitle">Check how much time a food item has at each redistribution stage</div>
+
+    <!-- Lookup tool -->
+    <div class="lookup-card">
+        <div class="lookup-title">🔬 Check Food Timeline</div>
+
+        <div class="lookup-row">
+            <div class="fg">
+                <label>Food Name</label>
+                <input type="text" id="lookup-food" placeholder="e.g. Chicken Curry, Rice, Dal...">
+            </div>
+            <div class="fg" style="max-width: 220px;">
+                <label>Prepared At</label>
+                <input type="datetime-local" id="lookup-prepared">
+            </div>
+            <button class="btn-check" onclick="checkTimeline()">Check Timeline</button>
+        </div>
+
+        <!-- Result -->
+        <div class="timeline-result" id="timeline-result">
+            <div class="tr-food-name" id="tr-food-name"></div>
+            <div class="tr-prepared" id="tr-prepared"></div>
+
+            <div class="stage-bars">
+                <!-- Human -->
+                <div class="stage-row">
+                    <div class="stage-label" style="color: var(--forest);">🟢 Human Safe</div>
+                    <div class="stage-bar-track">
+                        <div class="stage-bar-fill" id="bar-human" style="background: var(--forest); width: 0%"></div>
+                    </div>
+                    <div class="stage-hours" style="color: var(--forest);" id="hours-human">—</div>
+                </div>
+                <!-- Animal -->
+                <div class="stage-row">
+                    <div class="stage-label" style="color: var(--coral);">🟠 Animal Safe</div>
+                    <div class="stage-bar-track">
+                        <div class="stage-bar-fill" id="bar-animal" style="background: var(--coral); width: 0%"></div>
+                    </div>
+                    <div class="stage-hours" style="color: var(--coral);" id="hours-animal">—</div>
+                </div>
+                <!-- Compost -->
+                <div class="stage-row">
+                    <div class="stage-label" style="color: var(--navy);">🔵 Compost</div>
+                    <div class="stage-bar-track">
+                        <div class="stage-bar-fill" id="bar-compost" style="background: var(--navy); width: 0%"></div>
+                    </div>
+                    <div class="stage-hours" style="color: var(--navy);" id="hours-compost">—</div>
+                </div>
+            </div>
+
+            <div class="current-stage-banner" id="stage-banner">
+                <div class="csb-icon" id="stage-icon">⏱</div>
+                <div>
+                    <div class="csb-label">Current Redistribution Stage</div>
+                    <div class="csb-value" id="stage-value">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- All listings quality table -->
+    <div class="quality-table">
+        <div class="qt-title">📊 All Active Listings — Quality Status</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Food</th>
+                    <th>Type</th>
+                    <th>Timeline</th>
+                    <th>Stage</th>
+                    <th>Human hrs left</th>
+                    <th>Animal hrs left</th>
+                </tr>
+            </thead>
+            <tbody id="quality-tbody">
+                <tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:30px;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API = 'http://127.0.0.1:8000';
+
+    // Food reference data for client-side lookup
+    // In production this comes from the API
+    const FOOD_REF = {
+        'chicken curry':  { human: 4,  animal: 8,  compost: 18 },
+        'rice':           { human: 6,  animal: 12, compost: 24 },
+        'dal':            { human: 6,  animal: 12, compost: 24 },
+        'fish curry':     { human: 3,  animal: 6,  compost: 16 },
+        'paneer curry':   { human: 5,  animal: 10, compost: 20 },
+        'gulab jamun':    { human: 24, animal: 48, compost: 72 },
+        'kheer':          { human: 6,  animal: 10, compost: 20 },
+        'samosa':         { human: 8,  animal: 16, compost: 32 },
+        'biryani':        { human: 5,  animal: 10, compost: 22 },
+        'chapati':        { human: 8,  animal: 16, compost: 30 },
+        'soup':           { human: 5,  animal: 10, compost: 20 },
+        'salad':          { human: 3,  animal: 6,  compost: 14 },
+    };
+
+    function goBack() {
+        const role = localStorage.getItem('role');
+        window.location.href = role === 'donor' ? 'Dashboard.html' : 'NGOPage.html';
+    }
+
+    function stageMeta(stage) {
+        const map = {
+            human:   { color: '#1c422b', bg: 'rgba(28,66,43,0.1)',  icon: '🟢', label: 'Human Safe — Ready for people' },
+            animal:  { color: '#e3897d', bg: 'rgba(227,137,125,0.15)', icon: '🟠', label: 'Animal Safe — Suitable for animals' },
+            compost: { color: '#032942', bg: 'rgba(3,41,66,0.1)',   icon: '🔵', label: 'Compost Stage — Send to farmers' },
+            waste:   { color: '#6e1636', bg: 'rgba(110,22,54,0.1)', icon: '⛔', label: 'Waste — Beyond all stages' }
+        };
+        return map[stage] || map.waste;
+    }
+
+    function checkTimeline() {
+        const foodInput = document.getElementById('lookup-food').value.trim().toLowerCase();
+        const prepInput = document.getElementById('lookup-prepared').value;
+
+        if (!foodInput || !prepInput) {
+            alert('Please enter food name and preparation time.');
+            return;
+        }
+
+        // Find food in reference
+        let ref = null;
+        for (const key of Object.keys(FOOD_REF)) {
+            if (foodInput.includes(key) || key.includes(foodInput)) {
+                ref = FOOD_REF[key];
+                break;
+            }
+        }
+
+        // Default fallback
+        if (!ref) ref = { human: 5, animal: 10, compost: 22 };
+
+        const prepTime = new Date(prepInput);
+        const now = new Date();
+        const hoursSince = Math.max(0, (now - prepTime) / 3600000);
+
+        const remHuman   = Math.max(0, ref.human   - hoursSince);
+        const remAnimal  = Math.max(0, ref.animal  - hoursSince);
+        const remCompost = Math.max(0, ref.compost - hoursSince);
+
+        let stage;
+        if (hoursSince <= ref.human)   stage = 'human';
+        else if (hoursSince <= ref.animal)  stage = 'animal';
+        else if (hoursSince <= ref.compost) stage = 'compost';
+        else stage = 'waste';
+
+        // Update UI
+        document.getElementById('tr-food-name').textContent = document.getElementById('lookup-food').value;
+        document.getElementById('tr-prepared').textContent  = `Prepared: ${prepTime.toLocaleString()} · ${hoursSince.toFixed(1)} hours ago`;
+
+        const maxH = ref.compost;
+        document.getElementById('bar-human').style.width   = Math.min(100, (remHuman / maxH) * 100) + '%';
+        document.getElementById('bar-animal').style.width  = Math.min(100, (remAnimal / maxH) * 100) + '%';
+        document.getElementById('bar-compost').style.width = Math.min(100, (remCompost / maxH) * 100) + '%';
+
+        document.getElementById('hours-human').textContent   = remHuman.toFixed(1) + 'h';
+        document.getElementById('hours-animal').textContent  = remAnimal.toFixed(1) + 'h';
+        document.getElementById('hours-compost').textContent = remCompost.toFixed(1) + 'h';
+
+        const meta = stageMeta(stage);
+        const banner = document.getElementById('stage-banner');
+        banner.style.background = meta.bg;
+        document.getElementById('stage-icon').textContent  = meta.icon;
+        document.getElementById('stage-value').textContent = meta.label;
+        document.getElementById('stage-value').style.color = meta.color;
+
+        document.getElementById('timeline-result').style.display = 'block';
+    }
+
+    async function loadQualityTable() {
+        try {
+            const res  = await fetch(`${API}/listings/available`);
+            const data = await res.json();
+            const tbody = document.getElementById('quality-tbody');
+
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:30px;">No active listings.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(l => {
+                const maxH = l.remaining_compost_hours || 1;
+                const hw = ((l.remaining_human_hours  || 0) / maxH * 100).toFixed(0);
+                const aw = ((l.remaining_animal_hours || 0) / maxH * 100).toFixed(0);
+                const cw = 100;
+
+                return `
+                    <tr>
+                        <td style="font-weight:bold;">${l.food_name}</td>
+                        <td style="color:var(--text-muted);">${l.food_type}</td>
+                        <td>
+                            <div class="bar-mini">
+                                <div class="bm-compost" style="width:${cw}%"></div>
+                                <div class="bm-animal"  style="width:${aw}%"></div>
+                                <div class="bm-human"   style="width:${hw}%"></div>
+                            </div>
+                        </td>
+                        <td><span class="stage-badge stage-${l.redistribution_stage}">${l.redistribution_stage}</span></td>
+                        <td style="color:var(--forest);font-weight:bold;">${l.remaining_human_hours ?? '—'}h</td>
+                        <td style="color:var(--coral);font-weight:bold;">${l.remaining_animal_hours ?? '—'}h</td>
+                    </tr>
+                `;
+            }).join('');
+
+        } catch (e) {
+            document.getElementById('quality-tbody').innerHTML =
+                '<tr><td colspan="6" style="color:var(--wine);text-align:center;padding:30px;">Failed to load. Is the backend running?</td></tr>';
+        }
+    }
+
+    // Set default prepared_at to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('lookup-prepared').value = now.toISOString().slice(0, 16);
+
+    loadQualityTable();
+</script>
+
+</body>
+</html>

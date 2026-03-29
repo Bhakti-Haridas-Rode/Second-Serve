@@ -1,0 +1,62 @@
+food_name,category,food_type,human_safe_hours,animal_safe_hours,compost_hours,storage_temp,risk_level,notes
+Rice (cooked),Mains,veg,6,12,24,room_temp,medium,Spoils faster in heat
+Dal (cooked),Mains,veg,6,12,24,room_temp,medium,Store covered
+Chicken Curry,Mains,non-veg,4,8,18,room_temp,high,High protein spoilage risk
+Mutton Curry,Mains,non-veg,4,8,18,room_temp,high,High protein spoilage risk
+Fish Curry,Mains,non-veg,3,6,16,room_temp,high,Spoils fastest of all meats
+Paneer Curry,Mains,veg,5,10,20,room_temp,medium,Dairy based
+Rajma,Mains,veg,7,14,28,room_temp,low,Legume based stable
+Chole,Mains,veg,7,14,28,room_temp,low,Legume based stable
+Biryani (veg),Mains,veg,5,10,22,room_temp,medium,Mixed ingredients
+Biryani (non-veg),Mains,non-veg,4,8,18,room_temp,high,Mixed with meat
+Fried Rice,Mains,veg,5,10,22,room_temp,medium,Rice based
+Pasta,Mains,veg,5,10,22,room_temp,medium,Sauce affects shelf life
+Pizza (veg),Mains,veg,6,12,24,room_temp,medium,Cheese spoilage
+Pizza (non-veg),Mains,non-veg,5,10,20,room_temp,high,Meat topping risk
+Samosa,Snacks,veg,8,16,32,room_temp,low,Fried stable
+Pakora,Snacks,veg,6,12,24,room_temp,low,Fried absorbs moisture
+Sandwich (veg),Snacks,veg,4,8,18,room_temp,medium,Bread softens fast
+Sandwich (non-veg),Snacks,non-veg,3,6,16,room_temp,high,Meat filling risk
+Idli,Snacks,veg,6,12,24,room_temp,low,Fermented stable
+Dosa,Snacks,veg,4,8,18,room_temp,low,Best when fresh
+Vada,Snacks,veg,6,12,24,room_temp,low,Fried stable
+Puri,Snacks,veg,5,10,20,room_temp,low,Fried bread
+Chapati,Snacks,veg,8,16,30,room_temp,low,Dry bread stable
+Naan,Snacks,veg,6,12,24,room_temp,low,Leavened bread
+Gulab Jamun,Desserts,veg,24,48,72,room_temp,low,Sugar syrup preserves
+Rasgulla,Desserts,veg,12,24,48,room_temp,low,Syrup based
+Halwa,Desserts,veg,12,24,48,room_temp,medium,Ghee based
+Kheer,Desserts,veg,6,10,20,room_temp,high,Milk based spoils fast
+Barfi,Desserts,veg,24,48,72,room_temp,low,Dry sweet stable
+Cake (cream),Desserts,veg,8,14,24,room_temp,high,Cream spoils fast
+Cake (dry),Desserts,veg,24,48,72,room_temp,low,No cream stable
+Pastry,Desserts,veg,6,12,24,room_temp,high,Cream filling
+Fruit Salad,Desserts,vegan,3,6,16,room_temp,high,Oxidizes fast
+Smoothie,Beverages,vegan,3,6,16,room_temp,high,Oxidizes fast
+Lassi,Beverages,veg,4,8,18,room_temp,high,Dairy based
+Buttermilk,Beverages,veg,6,10,20,room_temp,medium,Fermented more stable
+Tea,Beverages,veg,2,4,12,room_temp,low,Stales fast
+Coffee,Beverages,veg,2,4,12,room_temp,low,Stales fast
+Juice (fresh),Beverages,vegan,4,8,18,room_temp,high,Oxidizes fast
+Lemonade,Beverages,vegan,8,14,24,room_temp,low,Acidic stable
+Salad (green),Others,vegan,3,6,14,room_temp,high,Wilts fast
+Raita,Others,veg,4,8,18,room_temp,high,Dairy based
+Pickle,Others,veg,168,200,240,room_temp,low,Preserved very stable
+Chutney (fresh),Others,vegan,8,14,24,room_temp,medium,Fresh herbs degrade
+Chutney (cooked),Others,vegan,24,36,48,room_temp,low,Cooked more stable
+Soup (veg),Others,veg,5,10,20,room_temp,medium,Liquid spoils moderately
+Soup (non-veg),Others,non-veg,4,8,18,room_temp,high,Meat stock spoils fast
+Egg Curry,Mains,non-veg,4,8,18,room_temp,high,Egg protein spoils fast
+Omelette,Snacks,non-veg,4,8,18,room_temp,high,Egg based
+Boiled Eggs,Snacks,non-veg,12,20,36,room_temp,medium,Shell protects partially
+Upma,Snacks,veg,5,10,20,room_temp,low,Semolina based
+Poha,Snacks,veg,4,8,18,room_temp,low,Flattened rice
+Pav Bhaji,Mains,veg,5,10,20,room_temp,medium,Mixed vegetable mash
+Misal Pav,Mains,veg,6,12,24,room_temp,low,Spiced sprouts
+Dhokla,Snacks,veg,8,16,30,room_temp,low,Fermented stable
+Khichdi,Mains,veg,6,12,24,room_temp,low,Simple lentil rice
+Pulao,Mains,veg,6,12,24,room_temp,medium,Rice based
+Curd (Yogurt),Others,veg,8,14,24,room_temp,medium,Fermented moderate
+Paneer (raw),Others,veg,8,14,24,room_temp,medium,Dairy refrigerate ideally
+Bread (sliced),Snacks,veg,24,36,48,room_temp,low,Packaged stable
+Roti (plain),Snacks,veg,8,16,30,room_temp,low,Dry flatbread
