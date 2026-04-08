@@ -4,285 +4,652 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Second Serve — Map</title>
+
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --coral:   #e3897d;
-            --dark:    #18212b;
-            --plum:    #6e1650;
-            --wine:    #6e1636;
-            --forest:  #1c422b;
-            --navy:    #032942;
-            --beige:   #f5f0e8;
+            --coral:      #e3897d;
+            --dark:       #18212b;
+            --plum:       #6e1650;
+            --wine:       #6e1636;
+            --forest:     #1c422b;
+            --navy:       #032942;
+            --beige:      #f5f0e8;
             --beige-dark: #ede5d8;
-            --white:   #ffffff;
+            --white:      #ffffff;
             --text-muted: #8a9bb0;
         }
 
-        body { font-family: 'Georgia', serif; background: var(--dark); }
+        body { font-family: 'Georgia', serif; background: var(--dark); overflow: hidden; }
 
-        /* Top bar */
+        /* ── TOP BAR ── */
         .topbar {
             position: fixed; top: 0; left: 0; right: 0; z-index: 500;
-            height: 60px;
+            height: 62px;
             background: var(--dark);
             display: flex; align-items: center;
-            padding: 0 28px;
-            gap: 20px;
+            padding: 0 28px; gap: 16px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
-        .topbar-logo { font-size: 17px; font-weight: bold; color: var(--white); }
-        .topbar-sub  { font-size: 12px; color: var(--coral); font-style: italic; }
+        .topbar-brand { display: flex; flex-direction: column; }
+        .topbar-logo  { font-size: 17px; font-weight: bold; color: var(--white); }
+        .topbar-sub   { font-size: 11px; color: var(--coral); font-style: italic; }
 
-        .topbar-nav { display: flex; gap: 6px; margin-left: 20px; }
+        .topbar-nav { display: flex; gap: 4px; margin-left: 16px; }
 
         .nav-link {
-            padding: 7px 16px; border-radius: 8px; font-size: 13px;
-            color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+            padding: 7px 15px; border-radius: 8px; font-size: 13px;
+            color: rgba(255,255,255,0.5); cursor: pointer;
+            transition: all 0.2s; font-family: 'Georgia', serif;
+            border: none; background: transparent;
+        }
+        .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.07); }
+        .nav-link.active { color: var(--white); background: rgba(255,255,255,0.07); }
+
+        /* Map style switcher */
+        .style-switcher {
+            display: flex; gap: 4px; align-items: center;
+        }
+        .style-label { font-size: 11px; color: rgba(255,255,255,0.35); margin-right: 4px; }
+        .style-btn {
+            padding: 5px 12px; border: none; border-radius: 7px;
+            font-family: 'Georgia', serif; font-size: 12px; cursor: pointer;
+            background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55);
             transition: all 0.2s;
         }
-        .nav-link:hover, .nav-link.active {
-            color: var(--white); background: rgba(255,255,255,0.08);
-        }
+        .style-btn.active { background: var(--plum); color: var(--white); font-weight: bold; }
 
-        .topbar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-
-        .legend {
-            display: flex; gap: 14px; align-items: center;
-        }
-
+        /* Legend */
+        .topbar-right { margin-left: auto; display: flex; gap: 14px; align-items: center; }
+        .legend { display: flex; gap: 14px; align-items: center; }
         .legend-item { display: flex; align-items: center; gap: 6px; }
-        .legend-dot  { width: 12px; height: 12px; border-radius: 50%; }
-        .legend-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .legend-dot  { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; }
+        .legend-label { font-size: 12px; color: rgba(255,255,255,0.55); }
 
-        /* Map */
+        /* Toggle panel button */
+        .toggle-panel-btn {
+            padding: 7px 16px; border: 1px solid rgba(110,22,80,0.6);
+            border-radius: 8px; background: transparent;
+            color: var(--coral); font-family: 'Georgia', serif;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toggle-panel-btn:hover { background: rgba(110,22,80,0.2); }
+
+        /* ── MAP ── */
         #map {
-            position: fixed; top: 60px; left: 0; right: 0; bottom: 0;
-            z-index: 1;
+            position: fixed; top: 62px; left: 0; right: 0; bottom: 0; z-index: 1;
         }
 
-        /* Side panel */
+        /* Leaflet popup custom style */
+        .leaflet-popup-content-wrapper {
+            border-radius: 14px !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18) !important;
+            font-family: 'Georgia', serif !important;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+        .leaflet-popup-content { margin: 0 !important; }
+        .leaflet-popup-tip-container { display: none; }
+
+        /* ── SIDE PANEL ── */
         .side-panel {
-            position: fixed; top: 60px; right: 0; bottom: 0;
-            width: 320px; z-index: 200;
+            position: fixed; top: 62px; right: 0; bottom: 0;
+            width: 340px; z-index: 200;
             background: var(--beige);
-            overflow-y: auto;
-            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+            display: flex; flex-direction: column;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.18);
             transform: translateX(100%);
             transition: transform 0.3s ease;
         }
-
         .side-panel.open { transform: translateX(0); }
 
         .panel-header {
-            padding: 20px 22px 16px;
-            background: var(--dark);
-            color: var(--white);
+            padding: 18px 22px 14px;
+            background: linear-gradient(135deg, var(--plum), var(--wine));
+            flex-shrink: 0; position: relative;
         }
-
-        .panel-title { font-size: 16px; font-weight: bold; }
-        .panel-sub   { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 3px; }
-
+        .panel-title { font-size: 16px; font-weight: bold; color: var(--white); }
+        .panel-count { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 3px; }
         .panel-close {
-            position: absolute; top: 16px; right: 16px;
+            position: absolute; top: 14px; right: 16px;
             background: none; border: none; color: rgba(255,255,255,0.6);
-            font-size: 20px; cursor: pointer;
+            font-size: 22px; cursor: pointer; line-height: 1;
         }
+        .panel-close:hover { color: var(--white); }
 
-        .panel-body { padding: 18px; }
+        /* Search and filter */
+        .panel-controls {
+            padding: 14px 16px;
+            background: var(--white);
+            border-bottom: 1px solid var(--beige-dark);
+            flex-shrink: 0;
+        }
+        .search-input {
+            width: 100%; padding: 9px 13px;
+            border: 1.5px solid var(--beige-dark); border-radius: 9px;
+            font-family: 'Georgia', serif; font-size: 13px;
+            color: var(--dark); outline: none; margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: var(--plum); }
 
+        .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 5px 12px; border: none; border-radius: 20px;
+            font-family: 'Georgia', serif; font-size: 11px;
+            font-weight: bold; text-transform: uppercase; cursor: pointer;
+            background: var(--beige-dark); color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .filter-btn.active { background: var(--plum); color: var(--white); }
+
+        /* Panel body */
+        .panel-body { flex: 1; overflow-y: auto; padding: 14px; }
+
+        /* Listing cards */
         .listing-card {
-            background: var(--white); border-radius: 12px;
-            padding: 16px; margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            background: var(--white); border-radius: 13px;
+            padding: 15px; margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer; border: 1.5px solid transparent;
+            transition: all 0.2s;
         }
+        .listing-card:hover  { border-color: var(--plum); transform: translateY(-1px); }
+        .listing-card.active { border-color: var(--plum); background: rgba(110,22,80,0.04); }
 
-        .lc-name   { font-size: 15px; font-weight: bold; color: var(--dark); }
-        .lc-meta   { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .lc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .lc-name   { font-size: 14px; font-weight: bold; color: var(--dark); }
+        .lc-meta   { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
+        /* Stage badge */
         .stage-badge {
-            display: inline-block; margin-top: 8px;
-            padding: 3px 10px; border-radius: 20px; font-size: 11px;
+            padding: 3px 10px; border-radius: 20px; font-size: 10px;
             font-weight: bold; text-transform: uppercase;
+            white-space: nowrap; flex-shrink: 0; margin-left: 8px;
         }
         .stage-human   { background: rgba(28,66,43,0.12);  color: var(--forest); }
-        .stage-animal  { background: rgba(227,137,125,0.2); color: var(--wine); }
-        .stage-compost { background: rgba(3,41,66,0.12);   color: var(--navy); }
+        .stage-animal  { background: rgba(227,137,125,0.2); color: var(--wine);   }
+        .stage-compost { background: rgba(3,41,66,0.1);    color: var(--navy);   }
+        .stage-waste   { background: rgba(110,22,80,0.1);  color: var(--plum);   }
 
-        .toggle-panel-btn {
-            position: fixed; right: 20px; top: 80px; z-index: 300;
-            background: var(--plum); color: var(--white);
-            border: none; padding: 10px 16px; border-radius: 10px;
-            font-family: 'Georgia', serif; font-size: 13px;
-            cursor: pointer; font-weight: bold;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        /* Timeline mini bars */
+        .tl-bars { margin: 10px 0 8px; display: flex; flex-direction: column; gap: 5px; }
+        .tl-row  { display: flex; align-items: center; gap: 8px; }
+        .tl-label { font-size: 10px; color: var(--text-muted); width: 46px; flex-shrink: 0; }
+        .tl-track { flex: 1; height: 5px; background: var(--beige-dark); border-radius: 3px; overflow: hidden; }
+        .tl-fill  { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+        .tl-val   { font-size: 10px; color: var(--text-muted); width: 28px; text-align: right; flex-shrink: 0; }
+
+        .lc-date { font-size: 11px; color: var(--text-muted); }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center; padding: 40px 20px;
+            color: var(--text-muted); font-size: 13px;
         }
+
+        /* Loading spinner */
+        .loading-state {
+            text-align: center; padding: 40px 20px; color: var(--text-muted);
+        }
+
+        /* Custom marker pulse animation */
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(227,137,125,0.5); }
+            70%  { box-shadow: 0 0 0 8px rgba(227,137,125,0); }
+            100% { box-shadow: 0 0 0 0 rgba(227,137,125,0); }
+        }
+        .marker-pulse { animation: pulse 2s infinite; }
+
+        /* Scrollbar styling */
+        .panel-body::-webkit-scrollbar { width: 5px; }
+        .panel-body::-webkit-scrollbar-track { background: var(--beige); }
+        .panel-body::-webkit-scrollbar-thumb { background: var(--beige-dark); border-radius: 3px; }
     </style>
 </head>
 <body>
 
-<!-- Top bar -->
+<!-- ── TOP BAR ── -->
 <div class="topbar">
-    <div>
+    <div class="topbar-brand">
         <div class="topbar-logo">🍛 Second Serve</div>
         <div class="topbar-sub">Live Map</div>
     </div>
 
-    <div class="topbar-nav">
-        <span class="nav-link" onclick="goBack()">← Back to Dashboard</span>
-        <span class="nav-link active">Map</span>
-        <span class="nav-link" onclick="window.location.href='QualityPage.html'">Food Quality</span>
+    <nav class="topbar-nav">
+        <button class="nav-link" onclick="goBack()">← Back</button>
+        <button class="nav-link active">Map</button>
+        <button class="nav-link" onclick="window.location.href='QualityPage.html'">Food Quality</button>
+    </nav>
+
+    <!-- Map style switcher -->
+    <div class="style-switcher">
+        <span class="style-label">Style:</span>
+        <button class="style-btn active" id="btn-standard"  onclick="setTile('standard')">Standard</button>
+        <button class="style-btn"        id="btn-satellite" onclick="setTile('satellite')">Satellite</button>
+        <button class="style-btn"        id="btn-dark"      onclick="setTile('dark')">Dark</button>
     </div>
 
     <div class="topbar-right">
+        <!-- Legend -->
         <div class="legend">
             <div class="legend-item">
-                <div class="legend-dot" style="background:#1c422b;"></div>
-                <div class="legend-label">Donor</div>
+                <div class="legend-dot" style="background:var(--forest);"></div>
+                <div class="legend-label">Human</div>
             </div>
             <div class="legend-item">
-                <div class="legend-dot" style="background:#032942;"></div>
-                <div class="legend-label">Receiver</div>
+                <div class="legend-dot" style="background:var(--coral);"></div>
+                <div class="legend-label">Animal</div>
             </div>
             <div class="legend-item">
-                <div class="legend-dot" style="background:#e3897d;"></div>
-                <div class="legend-label">Active Listing</div>
+                <div class="legend-dot" style="background:var(--navy);"></div>
+                <div class="legend-label">Compost</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--plum);"></div>
+                <div class="legend-label">Waste</div>
             </div>
         </div>
+
+        <!-- Panel toggle -->
+        <button class="toggle-panel-btn" onclick="togglePanel()">
+            📋 <span id="toggle-label">Show Listings</span>
+        </button>
     </div>
 </div>
 
-<!-- Map -->
+<!-- ── MAP ── -->
 <div id="map"></div>
 
-<!-- Toggle panel button -->
-<button class="toggle-panel-btn" onclick="togglePanel()">📋 View Listings</button>
-
-<!-- Side panel -->
+<!-- ── SIDE PANEL ── -->
 <div class="side-panel" id="side-panel">
+
     <div class="panel-header">
         <div class="panel-title">Available Listings</div>
-        <div class="panel-sub">Click a listing to see on map</div>
+        <div class="panel-count" id="panel-count">Loading...</div>
         <button class="panel-close" onclick="togglePanel()">×</button>
     </div>
+
+    <div class="panel-controls">
+        <input
+            class="search-input"
+            id="search-input"
+            type="text"
+            placeholder="Search food..."
+            oninput="filterCards()"
+        >
+        <div class="filter-row">
+            <button class="filter-btn active" data-filter="all"     onclick="setFilter(this)">All</button>
+            <button class="filter-btn"        data-filter="human"   onclick="setFilter(this)">Human</button>
+            <button class="filter-btn"        data-filter="animal"  onclick="setFilter(this)">Animal</button>
+            <button class="filter-btn"        data-filter="compost" onclick="setFilter(this)">Compost</button>
+            <button class="filter-btn"        data-filter="waste"   onclick="setFilter(this)">Waste</button>
+        </div>
+    </div>
+
     <div class="panel-body" id="panel-body">
-        Loading...
+        <div class="loading-state">Loading listings...</div>
     </div>
 </div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- MarkerCluster JS -->
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
 <script>
-    const API = 'http://127.0.0.1:8000';
+    const API   = 'http://127.0.0.1:8000';
     const token = localStorage.getItem('token');
 
-    // Init map — centered on India
-    const map = L.map('map').setView([19.07, 72.87], 10);
+    // ── STATE ──
+    let allListings  = [];
+    let allMarkers   = [];
+    let markerCluster;
+    let currentFilter = 'all';
+    let panelOpen     = false;
+    let currentTile;
+    let activeCardIndex = null;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 18
-    }).addTo(map);
+    // ── STAGE CONFIG ──
+    const STAGE = {
+        human:   { dot: '#1c422b', fill: 'rgba(28,66,43,0.12)',   text: '#1c422b' },
+        animal:  { dot: '#e3897d', fill: 'rgba(227,137,125,0.2)', text: '#6e1636' },
+        compost: { dot: '#032942', fill: 'rgba(3,41,66,0.1)',     text: '#032942' },
+        waste:   { dot: '#6e1650', fill: 'rgba(110,22,80,0.1)',   text: '#6e1650' },
+    };
 
-    // Custom marker icons
-    function makeIcon(color) {
+    // ── TILE LAYERS ──
+    const TILES = {
+        standard: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        satellite:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        dark:     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    };
+
+    // ── INIT MAP ──
+    const map = L.map('map', {
+        center: [19.2, 72.9],
+        zoom:   10,
+        zoomControl: false,
+    });
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    currentTile = L.tileLayer(TILES.standard, { maxZoom: 19 }).addTo(map);
+
+    // MarkerCluster group
+    markerCluster = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+                html: `<div style="
+                    width:36px;height:36px;border-radius:50%;
+                    background:var(--plum);border:3px solid white;
+                    display:flex;align-items:center;justify-content:center;
+                    font-family:Georgia,serif;font-size:13px;font-weight:bold;
+                    color:white;box-shadow:0 3px 10px rgba(0,0,0,0.3);
+                ">${count}</div>`,
+                className: '',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18],
+            });
+        },
+    });
+    map.addLayer(markerCluster);
+
+    // ── TILE SWITCHER ──
+    function setTile(style) {
+        currentTile.remove();
+        currentTile = L.tileLayer(TILES[style], { maxZoom: 19 }).addTo(map);
+        currentTile.bringToBack();
+
+        document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + style).classList.add('active');
+    }
+
+    // ── MAKE MARKER ICON ──
+    function makeIcon(stage, isActive) {
+        const s   = STAGE[stage] || STAGE.human;
+        const sz  = isActive ? 20 : 15;
+        const ring = isActive ? `outline:3px solid ${s.dot};outline-offset:3px;` : '';
         return L.divIcon({
-            html: `<div style="
-                width: 16px; height: 16px; border-radius: 50%;
-                background: ${color}; border: 3px solid white;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            html: `<div class="${isActive ? 'marker-pulse' : ''}" style="
+                width:${sz}px;height:${sz}px;border-radius:50%;
+                background:${s.dot};border:3px solid white;
+                box-shadow:0 2px 8px rgba(0,0,0,0.35);
+                ${ring}
+                transition:all 0.2s;
             "></div>`,
             className: '',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
+            iconSize:   [sz, sz],
+            iconAnchor: [sz/2, sz/2],
         });
     }
 
-    const donorIcon   = makeIcon('#1c422b');
-    const listingIcon = makeIcon('#e3897d');
+    // ── DETERMINISTIC COORDS (stable per listing id) ──
+    function getCoords(listing) {
+        const seed  = listing.id * 9301 + 49297;
+        const r1    = ((seed       % 233280) / 233280);
+        const r2    = ((seed * 49  % 233280) / 233280);
+        return [18.75 + r1 * 0.75, 72.75 + r2 * 0.55];
+    }
 
-    let panelOpen = false;
+    // ── POPUP CONTENT ──
+    function popupHTML(listing) {
+        const s = STAGE[listing.redistribution_stage] || STAGE.human;
+        const maxH = listing.remaining_compost_hours || 1;
+        const hw = Math.min(100, ((listing.remaining_human_hours  || 0) / maxH * 100)).toFixed(0);
+        const aw = Math.min(100, ((listing.remaining_animal_hours || 0) / maxH * 100)).toFixed(0);
 
+        return `
+        <div style="font-family:Georgia,serif;min-width:220px;max-width:240px;">
+
+            <!-- Header -->
+            <div style="
+                padding:14px 16px 10px;
+                background:linear-gradient(135deg,#6e1650,#6e1636);
+                color:white;
+            ">
+                <div style="font-size:16px;font-weight:bold;">${listing.food_name}</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:3px;">
+                    ${listing.quantity} servings &nbsp;·&nbsp; ${listing.food_type}
+                    &nbsp;·&nbsp; ₹${listing.price === 0 ? 'Free' : listing.price}
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div style="padding:12px 16px;background:#f5f0e8;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:10px;">
+                    <div>
+                        <div style="font-size:10px;color:#8a9bb0;text-transform:uppercase;margin-bottom:3px;">🟢 Human</div>
+                        <div style="font-size:18px;font-weight:bold;color:#1c422b;">${listing.remaining_human_hours ?? '—'}</div>
+                        <div style="font-size:10px;color:#8a9bb0;">hrs left</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:#8a9bb0;text-transform:uppercase;margin-bottom:3px;">🟠 Animal</div>
+                        <div style="font-size:18px;font-weight:bold;color:#6e1636;">${listing.remaining_animal_hours ?? '—'}</div>
+                        <div style="font-size:10px;color:#8a9bb0;">hrs left</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:#8a9bb0;text-transform:uppercase;margin-bottom:3px;">🔵 Compost</div>
+                        <div style="font-size:18px;font-weight:bold;color:#032942;">${listing.remaining_compost_hours ?? '—'}</div>
+                        <div style="font-size:10px;color:#8a9bb0;">hrs left</div>
+                    </div>
+                </div>
+
+                <!-- Mini bars -->
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                        <span style="font-size:10px;color:#8a9bb0;width:46px;">Human</span>
+                        <div style="flex:1;height:5px;background:#ede5d8;border-radius:3px;overflow:hidden;">
+                            <div style="height:100%;width:${hw}%;background:#1c422b;border-radius:3px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:10px;color:#8a9bb0;width:46px;">Animal</span>
+                        <div style="flex:1;height:5px;background:#ede5d8;border-radius:3px;overflow:hidden;">
+                            <div style="height:100%;width:${aw}%;background:#e3897d;border-radius:3px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stage badge -->
+                <span style="
+                    display:inline-block;padding:4px 12px;border-radius:20px;
+                    font-size:11px;font-weight:bold;text-transform:uppercase;
+                    background:${s.fill};color:${s.text};
+                ">Stage: ${listing.redistribution_stage}</span>
+
+                <div style="font-size:11px;color:#8a9bb0;margin-top:8px;">
+                    Posted: ${new Date(listing.created_at).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // ── PANEL CARD HTML ──
+    function cardHTML(listing, index) {
+        const s    = STAGE[listing.redistribution_stage] || STAGE.human;
+        const maxH = listing.remaining_compost_hours || 1;
+        const hw   = Math.min(100, ((listing.remaining_human_hours  || 0) / maxH * 100)).toFixed(0);
+        const aw   = Math.min(100, ((listing.remaining_animal_hours || 0) / maxH * 100)).toFixed(0);
+        const cw   = 100;
+
+        return `
+        <div class="listing-card" id="card-${index}" onclick="flyToListing(${index})">
+            <div class="lc-header">
+                <div>
+                    <div class="lc-name">${listing.food_name}</div>
+                    <div class="lc-meta">${listing.quantity} servings · ${listing.food_type} · ₹${listing.price === 0 ? 'Free' : listing.price}</div>
+                </div>
+                <span class="stage-badge stage-${listing.redistribution_stage}">${listing.redistribution_stage}</span>
+            </div>
+
+            <div class="tl-bars">
+                <div class="tl-row">
+                    <span class="tl-label">Human</span>
+                    <div class="tl-track"><div class="tl-fill" style="width:${hw}%;background:#1c422b;"></div></div>
+                    <span class="tl-val">${listing.remaining_human_hours ?? '—'}h</span>
+                </div>
+                <div class="tl-row">
+                    <span class="tl-label">Animal</span>
+                    <div class="tl-track"><div class="tl-fill" style="width:${aw}%;background:#e3897d;"></div></div>
+                    <span class="tl-val">${listing.remaining_animal_hours ?? '—'}h</span>
+                </div>
+                <div class="tl-row">
+                    <span class="tl-label">Compost</span>
+                    <div class="tl-track"><div class="tl-fill" style="width:${cw}%;background:#032942;"></div></div>
+                    <span class="tl-val">${listing.remaining_compost_hours ?? '—'}h</span>
+                </div>
+            </div>
+
+            <div class="lc-date">${new Date(listing.created_at).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})}</div>
+        </div>`;
+    }
+
+    // ── PLOT ALL MARKERS ──
+    function plotMarkers(data) {
+        markerCluster.clearLayers();
+        allMarkers = [];
+
+        data.forEach((listing, i) => {
+            const [lat, lon] = getCoords(listing);
+            const marker = L.marker([lat, lon], {
+                icon: makeIcon(listing.redistribution_stage, false),
+            });
+
+            marker.bindPopup(popupHTML(listing), { maxWidth: 260 });
+
+            marker.on('click', () => {
+                setActiveCard(i);
+            });
+
+            allMarkers.push({ marker, listing, lat, lon });
+            markerCluster.addLayer(marker);
+        });
+    }
+
+    // ── FLY TO LISTING ──
+    function flyToListing(index) {
+        const item = allMarkers[index];
+        if (!item) return;
+        map.flyTo([item.lat, item.lon], 15, { duration: 1.2 });
+        setTimeout(() => item.marker.openPopup(), 900);
+        setActiveCard(index);
+    }
+
+    // ── SET ACTIVE CARD ──
+    function setActiveCard(index) {
+        if (activeCardIndex !== null) {
+            const old = document.getElementById('card-' + activeCardIndex);
+            if (old) old.classList.remove('active');
+            if (allMarkers[activeCardIndex]) {
+                allMarkers[activeCardIndex].marker.setIcon(
+                    makeIcon(allMarkers[activeCardIndex].listing.redistribution_stage, false)
+                );
+            }
+        }
+        activeCardIndex = index;
+        const card = document.getElementById('card-' + index);
+        if (card) {
+            card.classList.add('active');
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        if (allMarkers[index]) {
+            allMarkers[index].marker.setIcon(
+                makeIcon(allMarkers[index].listing.redistribution_stage, true)
+            );
+        }
+    }
+
+    // ── RENDER PANEL CARDS ──
+    function renderCards(data) {
+        const body  = document.getElementById('panel-body');
+        const count = document.getElementById('panel-count');
+
+        if (!data.length) {
+            body.innerHTML  = '<div class="empty-state">No listings match.</div>';
+            count.textContent = '0 listings';
+            return;
+        }
+
+        count.textContent = `${data.length} listing${data.length !== 1 ? 's' : ''}`;
+        body.innerHTML    = data.map((l, i) => cardHTML(l, allListings.indexOf(l))).join('');
+    }
+
+    // ── FILTER ──
+    let currentSearch = '';
+
+    function setFilter(btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        applyFilters();
+    }
+
+    function filterCards() {
+        currentSearch = document.getElementById('search-input').value.toLowerCase();
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const filtered = allListings.filter(l => {
+            const matchFilter = currentFilter === 'all' || l.redistribution_stage === currentFilter;
+            const matchSearch = !currentSearch || l.food_name.toLowerCase().includes(currentSearch);
+            return matchFilter && matchSearch;
+        });
+        renderCards(filtered);
+        plotMarkers(filtered);
+    }
+
+    // ── TOGGLE PANEL ──
     function togglePanel() {
         panelOpen = !panelOpen;
         document.getElementById('side-panel').classList.toggle('open', panelOpen);
+        document.getElementById('toggle-label').textContent = panelOpen ? 'Hide Listings' : 'Show Listings';
     }
 
+    // ── GO BACK ──
     function goBack() {
         const role = localStorage.getItem('role');
         window.location.href = role === 'donor' ? 'Dashboard.html' : 'NGOPage.html';
     }
 
-    function stageBadge(stage) {
-        return `<span class="stage-badge stage-${stage}">${stage}</span>`;
-    }
-
+    // ── LOAD DATA ──
     async function loadMapData() {
         try {
             const res  = await fetch(`${API}/listings/available`);
             const data = await res.json();
+            allListings = data;
 
-            const panelBody = document.getElementById('panel-body');
+            plotMarkers(data);
+            renderCards(data);
 
-            if (!data.length) {
-                panelBody.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No active listings.</div>';
-                return;
+            // Auto-fit map to markers if listings exist
+            if (data.length > 0) {
+                const coords = data.map((l, i) => getCoords(l));
+                const bounds = L.latLngBounds(coords);
+                map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 });
             }
-
-            panelBody.innerHTML = '';
-
-            data.forEach(listing => {
-                // Add marker — use approximate coords for now
-                // In production these come from donor.latitude/longitude
-                const lat = 19.07 + (Math.random() - 0.5) * 0.4;
-                const lon = 72.87 + (Math.random() - 0.5) * 0.4;
-
-                const marker = L.marker([lat, lon], { icon: listingIcon }).addTo(map);
-                marker.bindPopup(`
-                    <div style="font-family:Georgia,serif; min-width:180px;">
-                        <div style="font-weight:bold;font-size:15px;">${listing.food_name}</div>
-                        <div style="font-size:12px;color:#666;margin-top:3px;">${listing.quantity} servings · ${listing.food_type}</div>
-                        <div style="margin-top:8px;">
-                            <span style="font-size:11px;color:#1c422b;font-weight:bold;">🟢 Human: ${listing.remaining_human_hours ?? '—'}h</span><br>
-                            <span style="font-size:11px;color:#e3897d;font-weight:bold;">🟠 Animal: ${listing.remaining_animal_hours ?? '—'}h</span><br>
-                            <span style="font-size:11px;color:#032942;font-weight:bold;">🔵 Compost: ${listing.remaining_compost_hours ?? '—'}h</span>
-                        </div>
-                        <div style="margin-top:8px;font-weight:bold;font-size:12px;text-transform:uppercase;color:#6e1650;">
-                            Stage: ${listing.redistribution_stage}
-                        </div>
-                    </div>
-                `);
-
-                // Panel card
-                const card = document.createElement('div');
-                card.className = 'listing-card';
-                card.style.cursor = 'pointer';
-                card.innerHTML = `
-                    <div class="lc-name">${listing.food_name}</div>
-                    <div class="lc-meta">${listing.quantity} servings · ${listing.food_type} · ₹${listing.price === 0 ? 'Free' : listing.price}</div>
-                    <div class="lc-meta" style="margin-top:5px;">
-                        🟢 ${listing.remaining_human_hours ?? '—'}h &nbsp;
-                        🟠 ${listing.remaining_animal_hours ?? '—'}h &nbsp;
-                        🔵 ${listing.remaining_compost_hours ?? '—'}h
-                    </div>
-                    ${stageBadge(listing.redistribution_stage)}
-                `;
-                card.onclick = () => {
-                    map.flyTo([lat, lon], 14, { duration: 1.2 });
-                    marker.openPopup();
-                };
-
-                panelBody.appendChild(card);
-            });
 
         } catch (e) {
             document.getElementById('panel-body').innerHTML =
-                '<div style="color:var(--wine);font-size:13px;padding:10px 0;">Failed to load. Is the backend running?</div>';
+                '<div class="empty-state" style="color:var(--wine);">Failed to load. Is the backend running?</div>';
+            document.getElementById('panel-count').textContent = 'Error';
         }
     }
 
+    // ── START ──
     loadMapData();
 </script>
 

@@ -1,8 +1,10 @@
-venv/
+.venv/
 __pycache__/
 *.pyc
-.env
+*.db
 node_modules/
 dist/
-build/
-.vscode/
+.env
+ml_pipeline/models/
+ml_pipeline/plots/
+ml_pipeline/data/
