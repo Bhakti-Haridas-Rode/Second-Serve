@@ -1,4 +1,40 @@
+# Second Serve — Static HTML deployment
+# No build step needed
+
+[build]
+  publish = "."
+
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/"
+  to   = "/pages/LoginPage.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to   = "/pages/LoginPage.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to   = "/pages/Dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/ngo"
+  to   = "/pages/NGOPage.html"
+  status = 200
+
+[[redirects]]
+  from = "/map"
+  to   = "/pages/MapPage.html"
+  status = 200
+
+[[redirects]]
+  from = "/quality"
+  to   = "/pages/QualityPage.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile"
+  to   = "/pages/ProfilePage.html"
   status = 200

@@ -177,6 +177,9 @@
         <div class="nav-item" onclick="window.location.href='QualityPage.html'">
             <span>⏱</span> Food Quality
         </div>
+        <div class="nav-item" onclick="window.location.href='ProfilePage.html'">
+            <span>👤</span> Profile
+        </div>
     </nav>
 
     <div class="sidebar-footer">
@@ -218,7 +221,7 @@
 </div>
 
 <script>
-    const API = 'http://127.0.0.1:8000';
+    const API = 'https://second-serve-api.onrender.com';
     const token = localStorage.getItem('token');
 
     if (!token) window.location.href = 'LoginPage.html';

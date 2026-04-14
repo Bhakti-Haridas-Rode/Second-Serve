@@ -1,16 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Second Serve</title>
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { margin: 0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: #18212b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Georgia', serif;
+            color: white;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .logo { font-size: 48px; }
+        .name { font-size: 28px; font-weight: bold; color: white; }
+        .sub  { font-size: 14px; color: #e3897d; font-style: italic; }
+        .dot  {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #e3897d; animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:0.4; transform:scale(0.8); }
+        }
     </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+</head>
+<body>
+    <div class="logo">🍛</div>
+    <div class="name">Second Serve</div>
+    <div class="sub">AI-driven circular food redistribution</div>
+    <div class="dot"></div>
+    <script>
+        // Redirect to login page
+        setTimeout(() => {
+            window.location.href = '/pages/LoginPage.html';
+        }, 600);
+    </script>
+</body>
 </html>
